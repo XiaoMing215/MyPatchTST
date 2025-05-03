@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from models.patchtst import PatchTST
 from utils.dataset import SineDataset
 import yaml
-
+from utils.dataset import ElectricityDataset
 
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
@@ -14,10 +14,9 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
         optimizer.zero_grad()
 
         output = model(x)  # [B, pred_len, C]
+        output = output[..., -1]  # 只取 OT，对齐 y 的维度 [B, pred_len]
 
-        # 直接计算损失，不需要转置
         loss = criterion(output, y)
-
         loss.backward()
         optimizer.step()
 
@@ -33,18 +32,18 @@ def evaluate(model, dataloader, criterion, device):
         for x, y in dataloader:
             x, y = x.to(device), y.to(device)
             output = model(x)  # [B, pred_len, C]
-            loss = criterion(output, y)  # 直接计算损失，不需要转置
+            output = output[..., -1]  # 只取 OT
+
+            loss = criterion(output, y)
             total_loss += loss.item()
     return total_loss / len(dataloader)
-
-
 
 def run(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 数据集
-    train_set = SineDataset(config["data_path"], config["input_len"], config["pred_len"], split='train')
-    val_set = SineDataset(config["data_path"], config["input_len"], config["pred_len"], split='val')
+    train_set = ElectricityDataset(config["data_path"], config["input_len"], config["pred_len"], split='train')
+    val_set = ElectricityDataset(config["data_path"], config["input_len"], config["pred_len"], split='val')
 
     train_loader = DataLoader(train_set, batch_size=config["batch_size"], shuffle=True)
     val_loader = DataLoader(val_set, batch_size=config["batch_size"])
