@@ -5,6 +5,7 @@ from models.patchtst import PatchTST
 from utils.dataset import SineDataset
 import yaml
 from utils.dataset import ElectricityDataset
+import matplotlib.pyplot as plt
 
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
@@ -38,6 +39,18 @@ def evaluate(model, dataloader, criterion, device):
             total_loss += loss.item()
     return total_loss / len(dataloader)
 
+def plot_loss_curve(train_losses, val_losses):
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training & Validation Loss Over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+
 def run(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -66,12 +79,17 @@ def run(config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
     criterion = nn.MSELoss()
 
+    train_losses = []
+    val_losses = []
+
     # 训练过程
     for epoch in range(1, config["epochs"] + 1):
         train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
         val_loss = evaluate(model, val_loader, criterion, device)
         print(f"Epoch {epoch}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}")
-
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+    plot_loss_curve(train_losses, val_losses)
 
 if __name__ == "__main__":
     # 加载配置文件

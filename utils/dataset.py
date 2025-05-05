@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 class SineDataset(Dataset):
     def __init__(self, csv_path, input_len=96, pred_len=24, split='train', train_ratio=0.8):
@@ -43,10 +44,11 @@ class SineDataset(Dataset):
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 class ElectricityDataset(Dataset):
-    def __init__(self, csv_path, input_len=96, pred_len=24, split='train', train_ratio=0.8):
+    def __init__(self, csv_path, input_len=96, pred_len=24, split='train', train_ratio=0.8, normalize=True):
         super().__init__()
         self.input_len = input_len
         self.pred_len = pred_len
+        self.normalize = normalize
 
         # 读取数据
         df = pd.read_csv(csv_path)
@@ -56,6 +58,11 @@ class ElectricityDataset(Dataset):
         data = df.iloc[:, 1:].astype(float)  # 去掉时间戳，仅保留数值列
 
         self.n_features = data.shape[1]
+
+        # 初始化归一化器
+        if self.normalize:
+            self.scaler = MinMaxScaler(feature_range=(0, 1))
+            data.iloc[:, :-1] = self.scaler.fit_transform(data.iloc[:, :-1])  # 对输入特征归一化
 
         # 滑动窗口切片
         total_len = input_len + pred_len
@@ -77,4 +84,5 @@ class ElectricityDataset(Dataset):
 
     def __getitem__(self, idx):
         x, y = self.samples[idx]
+        #不要在这里反归一
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
