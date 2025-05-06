@@ -21,15 +21,15 @@ class PatchEmbedding(nn.Module):
         self.d_model = d_model
         self.proj = nn.Linear(patch_len * input_dim, d_model) #线性变换更改为向量便于下一步处理
         self.position_embedding = PositionalEmbedding(d_model, max_len=patch_num)
-        self.padding = stride
-        self.padding = nn.ReplicationPad1d((0, self.padding))
+        #self.padding = stride
+        #self.padding = nn.ReplicationPad1d((0, self.padding))
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         # x: [B, L, C] batch 时间步 通道数
         B, L, C = x.shape
         patch_num = (L - self.patch_len) // self.stride + 1
-        x = self.padding(x)
+        #x = self.padding(x)
         x = x.permute(0, 2, 1)  # [B, L, C] 转换为 [B, C, L]
         x = x.unfold(dimension=2, size=self.patch_len, step=self.stride)  # [B, C, patch_num, patch_len]
         x = x.permute(0, 2, 3, 1)  # [B, patch_num, patch_len, C]

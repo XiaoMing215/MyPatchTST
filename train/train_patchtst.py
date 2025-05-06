@@ -3,8 +3,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from models.patchtst import PatchTST
 from utils.dataset import SineDataset
-import yaml
 from utils.dataset import ElectricityDataset
+from utils.dataset import ETThDataset
+import yaml
 import matplotlib.pyplot as plt
 
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
@@ -52,11 +53,12 @@ def plot_loss_curve(train_losses, val_losses):
 
 
 def run(config):
+    print(f"正在运行的数据集：{config['data_path']}")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 数据集
-    train_set = ElectricityDataset(config["data_path"], config["input_len"], config["pred_len"], split='train')
-    val_set = ElectricityDataset(config["data_path"], config["input_len"], config["pred_len"], split='val')
+    train_set = ETThDataset(config["data_path"], config["input_len"], config["pred_len"], split='train')
+    val_set = ETThDataset(config["data_path"], config["input_len"], config["pred_len"], split='val')
 
     train_loader = DataLoader(train_set, batch_size=config["batch_size"], shuffle=True)
     val_loader = DataLoader(val_set, batch_size=config["batch_size"])

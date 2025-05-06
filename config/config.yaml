@@ -1,4 +1,4 @@
-data_path: "data/sine_data.csv"
+data_path: "data/ETThS.csv"
 input_len: 96         # 输入序列长度
 pred_len: 24          # 预测序列长度
 batch_size: 32        # 批量大小
@@ -10,4 +10,4 @@ d_ff: 128             # 前馈层的维度
 dropout: 0.1          # Dropout率
 num_layers: 3         # Transformer层数
 lr: 0.001             # 学习率
-epochs: 100           # 训练轮数
+epochs: 1000           # 训练轮数
