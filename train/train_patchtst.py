@@ -3,7 +3,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from models.patchtst import PatchTST
 from utils.dataset import SineDataset
-from utils.dataset import ElectricityDataset
 from utils.dataset import ETThDataset
 import yaml
 import matplotlib.pyplot as plt
@@ -60,8 +59,12 @@ def run(config):
     train_set = ETThDataset(config["data_path"], config["input_len"], config["pred_len"], split='train')
     val_set = ETThDataset(config["data_path"], config["input_len"], config["pred_len"], split='val')
 
-    train_loader = DataLoader(train_set, batch_size=config["batch_size"], shuffle=True)
+    train_loader = DataLoader(train_set, batch_size=config["batch_size"], shuffle=True) #x：[B, input_len, C]
     val_loader = DataLoader(val_set, batch_size=config["batch_size"])
+
+    x, y = next(iter(train_loader))
+    print("train的x shape:", x.shape)
+    # print("train的y shape:", y.shape)
 
     # 模型初始化
     model = PatchTST(

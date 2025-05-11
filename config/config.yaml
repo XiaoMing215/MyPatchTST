@@ -10,4 +10,4 @@ d_ff: 128             # 前馈层的维度
 dropout: 0.1          # Dropout率
 num_layers: 3         # Transformer层数
 lr: 0.001             # 学习率
-epochs: 1000           # 训练轮数
+epochs: 100           # 训练轮数

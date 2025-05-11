@@ -43,49 +43,6 @@ class SineDataset(Dataset):
         x, y = self.samples[idx]
         return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
-class ElectricityDataset(Dataset):
-    def __init__(self, csv_path, input_len=96, pred_len=24, split='train', train_ratio=0.8, normalize=True):
-        super().__init__()
-        self.input_len = input_len
-        self.pred_len = pred_len
-        self.normalize = normalize
-
-        # 读取数据
-        df = pd.read_csv(csv_path)
-
-        # 假设第0列是时间戳，最后一列是 OT（目标）
-        self.timestamps = df.iloc[:, 0]
-        data = df.iloc[:, 1:].astype(float)  # 去掉时间戳，仅保留数值列
-
-        self.n_features = data.shape[1]
-
-        # 初始化归一化器
-        if self.normalize:
-            self.scaler = MinMaxScaler(feature_range=(0, 1))
-            data.iloc[:, :-1] = self.scaler.fit_transform(data.iloc[:, :-1])  # 对输入特征归一化
-
-        # 滑动窗口切片
-        total_len = input_len + pred_len
-        self.samples = []
-        for i in range(len(data) - total_len + 1):
-            input_seq = data.iloc[i : i + input_len].values  # [input_len, C]
-            target_seq = data.iloc[i + input_len : i + input_len + pred_len, -1].values  # [pred_len], 只取 OT 列
-            self.samples.append((input_seq, target_seq))
-
-        # 划分 train/val
-        split_idx = int(len(self.samples) * train_ratio)
-        if split == 'train':
-            self.samples = self.samples[:split_idx]
-        else:
-            self.samples = self.samples[split_idx:]
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-        x, y = self.samples[idx]
-        #不要在这里反归一
-        return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 
 class ETThDataset(Dataset):
@@ -96,18 +53,20 @@ class ETThDataset(Dataset):
         self.normalize = normalize
 
         print(f"正在加载数据集：{csv_path}")
-        df = pd.read_csv(csv_path, sep='\t')  # 一定确认你是tab分隔！
+        df = pd.read_csv(csv_path, sep=',')
 
         self.timestamps = df.iloc[:, 0]
         data = df.iloc[:, 1:].astype(float)
+        print("data 前几行：\n", data.head())
+        print("data 类型：", type(data))
         self.n_features = data.shape[1]
         print(f"数据包含 {self.n_features} 个数值特征（不含时间列）")
 
-        # 归一化（对最后一列 OT 不做归一化）
+        # 归一化（对最后一列 OT 也需要归一化）
         if self.normalize:
             self.scaler = MinMaxScaler()
             before_norm = data.head(2).copy()
-            data.iloc[:, :-1] = self.scaler.fit_transform(data.iloc[:, :-1])
+            data.iloc[:, :] = self.scaler.fit_transform(data.iloc[:, :])
             print("归一化前前两行：\n", before_norm)
             print("归一化后前两行：\n", data.head(2))
 
@@ -116,7 +75,7 @@ class ETThDataset(Dataset):
         self.samples = []
         for i in range(len(data) - total_len + 1):
             input_seq = data.iloc[i : i + input_len].values
-            target_seq = data.iloc[i + input_len : i + input_len + pred_len, -1].values
+            target_seq = data.iloc[i + input_len : i + input_len + pred_len].values
             self.samples.append((input_seq, target_seq))
 
         # 数据集划分
@@ -130,7 +89,7 @@ class ETThDataset(Dataset):
 
         # 输出一个样本的形状确认
         x0, y0 = self.samples[0]
-        print(f"示例输入 x 的 shape: {x0.shape}，目标 y 的 shape: {y0.shape}")
+        # print(f"示例输入 x 的 shape: {x0.shape}，目标 y 的 shape: {y0.shape}")
 
     def __len__(self):
         return len(self.samples)
