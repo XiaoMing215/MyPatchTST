@@ -4,10 +4,16 @@ pred_len: 24          # 预测序列长度
 batch_size: 32        # 批量大小
 patch_len: 16         # 每个patch的长度
 stride: 8           # 步幅
-d_model: 64           # 模型的维度
-n_heads: 4            # 多头注意力的头数
 d_ff: 128             # 前馈层的维度
 dropout: 0.1          # Dropout率
+
+factor: 5
+activation: "relu"
+output_attention: False
+window: 32
+d_model: 64           # 模型的维度
+n_heads: 4            # 多头注意力的头数
 num_layers: 3         # Transformer层数
 lr: 0.001             # 学习率
 epochs: 100           # 训练轮数
+

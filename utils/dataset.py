@@ -89,7 +89,7 @@ class ETThDataset(Dataset):
 
         # 输出一个样本的形状确认
         x0, y0 = self.samples[0]
-        # print(f"示例输入 x 的 shape: {x0.shape}，目标 y 的 shape: {y0.shape}")
+        print(f"示例输入 x 的 shape: {x0.shape}，目标 y 的 shape: {y0.shape}")
 
     def __len__(self):
         return len(self.samples)

@@ -15,14 +15,15 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
         optimizer.zero_grad()
 
         output = model(x)  # [B, pred_len, C]
-        output = output[..., -1]  # 只取 OT，对齐 y 的维度 [B, pred_len]
+        # output = output[..., -1]  # 只取 OT，对齐 y 的维度 [B, pred_len]
 
+        # print("output:",output.shape)
+        # print("y:",y.shape)
         loss = criterion(output, y)
         loss.backward()
         optimizer.step()
 
         total_loss += loss.item()
-
     return total_loss / len(dataloader)
 
 
@@ -33,7 +34,6 @@ def evaluate(model, dataloader, criterion, device):
         for x, y in dataloader:
             x, y = x.to(device), y.to(device)
             output = model(x)  # [B, pred_len, C]
-            output = output[..., -1]  # 只取 OT
 
             loss = criterion(output, y)
             total_loss += loss.item()
@@ -64,21 +64,22 @@ def run(config):
 
     x, y = next(iter(train_loader))
     print("train的x shape:", x.shape)
-    # print("train的y shape:", y.shape)
+    print("train的y shape:", y.shape)
 
     # 模型初始化
-    model = PatchTST(
-        input_len=config["input_len"],  # 输入长度
-        pred_len=config["pred_len"],    # 预测长度
-        patch_len=config["patch_len"],  # patch大小
-        stride=config["stride"],        # 步幅
-        d_model=config["d_model"],      # 模型维度
-        n_heads=config["n_heads"],      # 多头注意力数
-        d_ff=config["d_ff"],            # 前馈神经网络维度
-        num_layers=config["num_layers"],# Transformer层数
-        dropout=config["dropout"],      # Dropout率
-        n_features=train_set.n_features # 特征数量（从数据集读取）
-    ).to(device)
+    # model = PatchTST(
+    #     input_len=config["input_len"],  # 输入长度
+    #     pred_len=config["pred_len"],    # 预测长度
+    #     patch_len=config["patch_len"],  # patch大小
+    #     stride=config["stride"],        # 步幅
+    #     d_model=config["d_model"],      # 模型维度
+    #     n_heads=config["n_heads"],      # 多头注意力数
+    #     d_ff=config["d_ff"],            # 前馈神经网络维度
+    #     num_layers=config["num_layers"],# Transformer层数
+    #     dropout=config["dropout"],      # Dropout率
+    #     n_features=train_set.n_features # 特征数量（从数据集读取）
+    # ).to(device)
+    model = PatchTST(config).to(device)
 
     # 优化器和损失函数
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
