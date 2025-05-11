@@ -83,13 +83,28 @@ class PatchTSThead(nn.Module):
         self.heads = nn.ModuleList([
             nn.Linear(d_model * patch_num, pred_len) for _ in range(num_vars)
         ])
-
     def forward(self, x):
         # x: [B, N_patch, d_model]
         B, N, D = x.shape
         x = x.reshape(B, -1)  # [B, N_patch * d_model]
         out = torch.stack([head(x) for head in self.heads], dim=1)  # [B, C, pred_len]
         return out
+
+class FlattenHead(nn.Module):
+    def __init__(self, nf, pred_len, head_dropout=0):
+        #nf:d_model × patch_num 可以不用传入 但是为了少耦合就选择了传入
+        super().__init__()
+        self.flatten = nn.Flatten(start_dim=-2) #d_model 和 patch_num合并
+        self.linear = nn.Linear(nf, pred_len)
+        self.dropout = nn.Dropout(head_dropout)
+
+    def forward(self, x):  # x: [B, C, d_model, patch_num]
+        x = self.flatten(x) #[B, C, nf]
+        x = self.linear(x) #[B, C, nf->pred_len]
+        #这个 linear 就是输出层，负责把最后一层表示映射成预测值。
+        x = self.dropout(x)
+        return x
+
 
 class PatchTST(nn.Module):
     def __init__(self, input_len, pred_len, patch_len, stride,
